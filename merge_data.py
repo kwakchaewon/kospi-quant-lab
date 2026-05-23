@@ -233,14 +233,25 @@ def merge_stock_data():
             **supply,
             # F3/F4: Claude 웹검색으로 채울 placeholder
             "Factor3_실적":           None,
+            "F3_근거": {
+                "①어닝서프라이즈": None,
+                "②YoY":           None,
+                "③목표가":         None,
+            },
+            "특수사유":               None,
+            "F4_대상":                None,
             "Factor4_밸류":           None,
+            "PER_ratio":              None,
             "업종명":                 None,
             "Forward_PER":            None,
+            "업종_평균_PER":          None,
             "목표가_평균":            None,
+            "목표가_상향건수_3개월":  None,
             "컨센서스":               None,
+            "어닝서프라이즈_실적값":  None,
+            "어닝서프라이즈_비율":    None,
             "최근분기_영업이익_YoY":  None,
             "최근3년_매출_연속증가":  None,
-            "업종_평균_PER":          None,
             "메모":                   None,
             "분석상태":               "🔍 분석중",
             # Raw 데이터
@@ -249,23 +260,23 @@ def merge_stock_data():
 
         merged_data.append(merged_item)
 
-    # ── F1/F2 카테고리 분류 ───────────────────────────────────────
+    # ── Factor별 충족 종목 집계 ──────────────────────────────────
     def _is_pass(item, key):
         return item.get(key) == "✅ 충족"
 
-    cat_both    = [i['종목명'] for i in merged_data if     _is_pass(i,'Factor1_기술') and     _is_pass(i,'Factor2_수급')]
-    cat_f1_only = [i['종목명'] for i in merged_data if     _is_pass(i,'Factor1_기술') and not _is_pass(i,'Factor2_수급')]
-    cat_f2_only = [i['종목명'] for i in merged_data if not _is_pass(i,'Factor1_기술') and     _is_pass(i,'Factor2_수급')]
-    cat_neither = [i['종목명'] for i in merged_data if not _is_pass(i,'Factor1_기술') and not _is_pass(i,'Factor2_수급')]
+    cat_f1 = [i['종목명'] for i in merged_data if _is_pass(i, 'Factor1_기술')]
+    cat_f2 = [i['종목명'] for i in merged_data if _is_pass(i, 'Factor2_수급')]
+    cat_f3 = [i['종목명'] for i in merged_data if _is_pass(i, 'Factor3_실적')]
+    cat_f4 = [i['종목명'] for i in merged_data if _is_pass(i, 'Factor4_밸류')]
 
     # ── 집계 요약 ─────────────────────────────────────────────────
     summary = {
-        "분석일":       today,
-        "전체_종목수":  len(merged_data),
-        "F1F2_모두충족": {"개수": len(cat_both),    "종목": cat_both},
-        "F1만_충족":    {"개수": len(cat_f1_only), "종목": cat_f1_only},
-        "F2만_충족":    {"개수": len(cat_f2_only), "종목": cat_f2_only},
-        "둘다_미충족":  {"개수": len(cat_neither), "종목": cat_neither},
+        "분석일":      today,
+        "전체_종목수": len(merged_data),
+        "F1_충족": {"개수": len(cat_f1), "종목": cat_f1},
+        "F2_충족": {"개수": len(cat_f2), "종목": cat_f2},
+        "F3_충족": {"개수": len(cat_f3), "종목": cat_f3},
+        "F4_충족": {"개수": len(cat_f4), "종목": cat_f4},
     }
 
     # 병합 결과 저장
