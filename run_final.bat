@@ -14,4 +14,9 @@ echo [4/4] merge...
 python merge_data.py
 
 echo Done.
+
+echo [5/5] stock_data_full.json git push...
+git add stock_data_full.json
+git diff --cached --quiet && (echo [skip] no changes to commit) || (git commit -m "data: %DATE% F1/F2 업데이트" && git push origin main && echo [ok] pushed)
+
 pause

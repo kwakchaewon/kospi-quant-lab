@@ -27,3 +27,4 @@ Thumbs.db
 # Data files (large / auto-generated)
 *.json
 !stock_list.json
+!stock_data_full.json
