@@ -1,0 +1,29 @@
+# API Keys - DO NOT COMMIT
+appkey.txt
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code internal
+.claude/
+
+# Data files (large / auto-generated)
+*.json
+!stock_list.json
