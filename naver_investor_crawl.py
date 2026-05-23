@@ -82,13 +82,6 @@ class NaverInvestorCrawler:
                 print('데이터 없음')
                 return self._empty(ticker, stock_name)
 
-            # investor.naver에서 개인 순매수 데이터 추가
-            indiv_dict = self._fetch_individual_data(ticker, days)
-            for rec in records:
-                indiv_net = indiv_dict.get(rec['날짜'], 0)
-                rec['개인_순매수_수량'] = indiv_net
-                rec['개인_순매수_금액'] = indiv_net * rec['종가']
-
             print(f'OK ({len(records)}거래일)')
             return {
                 '종목코드': ticker,
@@ -186,69 +179,6 @@ class NaverInvestorCrawler:
                 i += 1
 
         return records
-
-    # ------------------------------------------------------------------ #
-    #  내부: 개인 순매수 (investor.naver)                                   #
-    # ------------------------------------------------------------------ #
-
-    def _fetch_individual_data(self, ticker, days):
-        """investor.naver에서 개인 순매수 {날짜: 수량} dict 반환"""
-        try:
-            url = f'https://finance.naver.com/item/investor.naver?code={ticker}'
-            resp = requests.get(url, headers=self.headers, timeout=10)
-            resp.encoding = 'euc-kr'
-            if resp.status_code != 200:
-                return {}
-            if BS4_AVAILABLE:
-                return self._parse_individual_bs4(resp.text, days)
-            return self._parse_individual_regex(resp.text, days)
-        except Exception:
-            return {}
-
-    def _parse_individual_bs4(self, html, days):
-        """investor.naver 테이블 파싱 — 날짜→개인순매수수량 dict"""
-        soup = BeautifulSoup(html, 'html.parser')
-        result = {}
-        for table in soup.find_all('table'):
-            for row in table.find_all('tr'):
-                tds = row.find_all('td')
-                if len(tds) < 4:
-                    continue
-                date_txt = tds[0].get_text(strip=True)
-                if not re.match(r'\d{4}\.\d{2}\.\d{2}', date_txt):
-                    continue
-                try:
-                    result[date_txt] = self._to_int(tds[1].get_text(strip=True))
-                    if len(result) >= days:
-                        return result
-                except Exception:
-                    continue
-        return result
-
-    def _parse_individual_regex(self, html, days):
-        """BeautifulSoup 없을 때 regex 폴백으로 개인 순매수 추출"""
-        td_pat  = re.compile(r'<td[^>]*>(.*?)</td>', re.DOTALL | re.IGNORECASE)
-        tag_pat = re.compile(r'<[^>]+>')
-
-        def clean(raw):
-            return tag_pat.sub('', raw).replace(',', '').replace('+', '').strip()
-
-        tds = [clean(m) for m in td_pat.findall(html)]
-        result = {}
-        i = 0
-        # investor.naver 행당 약 13컬럼: 날짜|개인|외국인|기관합계|금융투자|보험|투신|사모|은행|기타금융|연기금|국가|기타법인
-        while i < len(tds) - 1:
-            if re.match(r'\d{4}\.\d{2}\.\d{2}', tds[i]):
-                try:
-                    result[tds[i]] = self._to_int(tds[i + 1])
-                    if len(result) >= days:
-                        return result
-                    i += 13
-                except Exception:
-                    i += 1
-            else:
-                i += 1
-        return result
 
     # ------------------------------------------------------------------ #
     #  내부: 유틸                                                           #
@@ -350,16 +280,13 @@ def main():
     sample = next((d for d in all_data if d['투자자_매매동향']), None)
     if sample:
         print(f"\n샘플 - {sample['종목명']}({sample['종목코드']})")
-        print(f"  {'날짜':<12} {'개인순매수':>12}주 {'금액':>8}억  "
-              f"{'외국인순매수':>12}주 {'금액':>8}억  "
+        print(f"  {'날짜':<12} {'외국인순매수':>12}주 {'금액':>8}억  "
               f"{'기관순매수':>12}주 {'금액':>8}억")
-        print(f"  {'-'*80}")
+        print(f"  {'-'*60}")
         for row in sample['투자자_매매동향'][:5]:
-            pa = row.get('개인_순매수_금액', 0) / 1e8
             fa = row['외국인_순매수_금액'] / 1e8
             ia = row['기관_순매수_금액']  / 1e8
             print(f"  {row['날짜']:<12} "
-                  f"{row.get('개인_순매수_수량', 0):>+12,}주 {pa:>+8.1f}억  "
                   f"{row['외국인_순매수_수량']:>+12,}주 {fa:>+8.1f}억  "
                   f"{row['기관_순매수_수량']:>+12,}주 {ia:>+8.1f}억")
 
