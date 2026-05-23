@@ -28,3 +28,4 @@ Thumbs.db
 *.json
 !stock_list.json
 !stock_data_full.json
+!docs/data-history/*.json
