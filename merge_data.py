@@ -211,6 +211,8 @@ def merge_stock_data():
         if ticker in investor_dict:
             records = investor_dict[ticker].get('투자자_매매동향', [])
             supply = {
+                "개인_5일_순매수":        _sum_net(records, '개인_순매수_수량', 5),
+                "개인_5일_순매수_금액":   _sum_net(records, '개인_순매수_금액', 5),
                 "외국인_5일_순매수":      _sum_net(records, '외국인_순매수_수량', 5),
                 "외국인_5일_순매수_금액": _sum_net(records, '외국인_순매수_금액', 5),
                 "기관_5일_누적":          _sum_net(records, '기관_순매수_수량', 5),
@@ -220,6 +222,8 @@ def merge_stock_data():
         else:
             records = []
             supply = {
+                "개인_5일_순매수":        None,
+                "개인_5일_순매수_금액":   None,
                 "외국인_5일_순매수":      None,
                 "외국인_5일_순매수_금액": None,
                 "기관_5일_누적":          None,
@@ -252,11 +256,6 @@ def merge_stock_data():
     cat_f1_only = [i['종목명'] for i in merged_data if     _is_pass(i,'Factor1_기술') and not _is_pass(i,'Factor2_수급')]
     cat_f2_only = [i['종목명'] for i in merged_data if not _is_pass(i,'Factor1_기술') and     _is_pass(i,'Factor2_수급')]
     cat_neither = [i['종목명'] for i in merged_data if not _is_pass(i,'Factor1_기술') and not _is_pass(i,'Factor2_수급')]
-
-    # 둘 다 미충족 종목은 투자자_매매동향 20일 배열 제거 (용량 절감)
-    for item in merged_data:
-        if not _is_pass(item, 'Factor1_기술') and not _is_pass(item, 'Factor2_수급'):
-            item.pop('투자자_매매동향', None)
 
     # ── 집계 요약 ─────────────────────────────────────────────────
     summary = {
