@@ -130,7 +130,7 @@ def _factor2(records):
 
 def merge_stock_data():
     print("=" * 60)
-    print("🔄 데이터 병합 시작")
+    print("데이터 병합 시작")
     print("=" * 60)
 
     today = date.today().isoformat()
@@ -139,9 +139,9 @@ def merge_stock_data():
     try:
         with open('stock_data.json', 'r', encoding='utf-8') as f:
             kis_data = json.load(f)
-        print(f"✅ KIS API 데이터 로드: {len(kis_data)}개 종목")
+        print(f"[OK] KIS API 데이터 로드: {len(kis_data)}개 종목")
     except FileNotFoundError:
-        print("❌ stock_data.json 파일이 없습니다.")
+        print("[ERR] stock_data.json 파일이 없습니다.")
         print("   먼저 'python auto_update.py'를 실행하세요.")
         sys.exit(1)
 
@@ -149,9 +149,9 @@ def merge_stock_data():
     try:
         with open('naver_ma_data.json', 'r', encoding='utf-8') as f:
             naver_data = json.load(f)
-        print(f"✅ 네이버 MA 데이터 로드: {len(naver_data)}개 종목")
+        print(f"[OK] 네이버 MA 데이터 로드: {len(naver_data)}개 종목")
     except FileNotFoundError:
-        print("❌ naver_ma_data.json 파일이 없습니다.")
+        print("[ERR] naver_ma_data.json 파일이 없습니다.")
         print("   먼저 'python naver_crawl.py'를 실행하세요.")
         sys.exit(1)
 
@@ -159,15 +159,15 @@ def merge_stock_data():
     try:
         with open('naver_investor_data.json', 'r', encoding='utf-8') as f:
             investor_data = json.load(f)
-        print(f"✅ 네이버 투자자 데이터 로드: {len(investor_data)}개 종목")
+        print(f"[OK] 네이버 투자자 데이터 로드: {len(investor_data)}개 종목")
     except FileNotFoundError:
-        print("⚠️  naver_investor_data.json 없음 — 투자자 데이터 생략")
+        print("[WARN] naver_investor_data.json 없음 — 투자자 데이터 생략")
         print("   추가하려면 'python naver_investor_crawl.py'를 먼저 실행하세요.")
         investor_data = []
 
     # 데이터 병합
     print("\n" + "=" * 60)
-    print("🔗 데이터 병합 중...")
+    print("데이터 병합 중...")
 
     naver_dict    = {item['종목코드']: item for item in naver_data}
     investor_dict = {item['종목코드']: item for item in investor_data}
@@ -326,21 +326,21 @@ def merge_stock_data():
     ]
 
     print("=" * 60)
-    print(f"✅ 병합 완료: {len(merged_data)}개 종목 (분석일: {today})")
+    print(f"[OK] 병합 완료: {len(merged_data)}개 종목 (분석일: {today})")
     if null_stocks:
-        print(f"⚠️  MA60/MA120 누락 종목 ({len(null_stocks)}개):")
+        print(f"[WARN] MA60/MA120 누락 종목 ({len(null_stocks)}개):")
         for s in null_stocks:
             print(f"   - {s}")
     else:
-        print("✅ 모든 종목 MA60/MA120 정상 수집")
-    print(f"💾 저장 완료: stock_data_full.json")
+        print("[OK] 모든 종목 MA60/MA120 정상 수집")
+    print(f"저장 완료: stock_data_full.json")
     print("=" * 60)
-    print(f"\n📊 Factor 집계:")
+    print(f"\nFactor 집계:")
     print(f"  F1+F2 모두 충족: {len(cat_both)}개  {cat_both}")
     print(f"  F1만  충족:      {len(cat_f1_only)}개  {cat_f1_only}")
     print(f"  F2만  충족:      {len(cat_f2_only)}개  {cat_f2_only}")
     print(f"  둘 다 미충족:    {len(cat_neither)}개")
-    print(f"\n✅ 이제 'stock_data_full.json'을 Claude에 업로드하세요!")
+    print(f"\n[DONE] stock_data_full.json을 Claude에 업로드하세요!")
 
 
 if __name__ == "__main__":

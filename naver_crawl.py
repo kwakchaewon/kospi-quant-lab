@@ -41,7 +41,7 @@ class NaverFinanceCrawler:
 
     def get_moving_averages(self, ticker, stock_name=""):
         """MA60, MA120, PER, FPER 수집"""
-        print(f"📊 {stock_name}({ticker}) 크롤링 중...", end=" ")
+        print(f"  {stock_name}({ticker}) 크롤링 중...", end=" ")
 
         try:
             # 네이버 금융 페이지 접근
@@ -76,10 +76,10 @@ class NaverFinanceCrawler:
                     if ma60 is not None and ma120 is not None:
                         ratio = ma60 / ma120
                         if ratio < 0.5 or ratio > 2.0:
-                            print(f"⚠️ MA sanity warning {ticker}: MA60={ma60:,} MA120={ma120:,} ratio={ratio:.2f}")
+                            print(f"[WARN] MA sanity warning {ticker}: MA60={ma60:,} MA120={ma120:,} ratio={ratio:.2f}")
 
                     per, fper = self._parse_per(html)
-                    print("✅")
+                    print("OK")
                     return {
                         "종목코드": ticker,
                         "종목명": stock_name,
@@ -92,7 +92,7 @@ class NaverFinanceCrawler:
                         "FPER":      fper,
                     }
                 else:
-                    print("⚠️ (데이터 부족)")
+                    print("[WARN] (데이터 부족)")
                     return {
                         "종목코드": ticker,
                         "종목명": stock_name,
@@ -105,11 +105,11 @@ class NaverFinanceCrawler:
                         "FPER":      None,
                     }
             else:
-                print("❌")
+                print("FAIL")
                 return None
 
         except Exception as e:
-            print(f"❌ ({str(e)[:30]})")
+            print(f"[ERR] ({str(e)[:30]})")
             return {
                 "종목코드": ticker,
                 "종목명": stock_name,
@@ -204,16 +204,16 @@ class NaverFinanceCrawler:
 
 def main():
     print("=" * 60)
-    print("📈 네이버 금융 크롤링 시스템 (MA60, MA120)")
+    print("네이버 금융 크롤링 시스템 (MA60, MA120)")
     print("=" * 60)
     
     # 종목 리스트 로드
     try:
         with open('stock_list.json', 'r', encoding='utf-8') as f:
             stock_list = json.load(f)
-        print(f"\n📋 관심종목: {len(stock_list)}개")
+        print(f"\n관심종목: {len(stock_list)}개")
     except FileNotFoundError:
-        print("\n❌ stock_list.json 파일이 없습니다.")
+        print("\n[ERR] stock_list.json 파일이 없습니다.")
         sys.exit(1)
     
     # 크롤러 초기화
@@ -240,18 +240,18 @@ def main():
     # 검증 결과 출력
     print("=" * 60)
     if len(all_data) == len(stock_list):
-        print(f"✅ 전체 {len(stock_list)}개 종목 모두 수집 완료")
+        print(f"[OK] 전체 {len(stock_list)}개 종목 모두 수집 완료")
     else:
-        print(f"⚠️  수집 완료: {len(all_data)}/{len(stock_list)}개")
-        print(f"❌ 실패 종목 ({len(failed_stocks)}개):")
+        print(f"[WARN] 수집 완료: {len(all_data)}/{len(stock_list)}개")
+        print(f"[FAIL] 실패 종목 ({len(failed_stocks)}개):")
         for s in failed_stocks:
             print(f"   - {s}")
-    print(f"💾 저장 완료: naver_ma_data.json")
+    print(f"저장 완료: naver_ma_data.json")
     print("=" * 60)
     
     # 샘플 출력
     if all_data:
-        print("\n📊 샘플 데이터:")
+        print("\n샘플 데이터:")
         sample = all_data[0]
         print(f"  종목: {sample['종목명']}({sample['종목코드']})")
         if sample['MA60']:

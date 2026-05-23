@@ -33,13 +33,13 @@ class KISStockAPI:
             if response.status_code == 200:
                 result = response.json()
                 self.access_token = result['access_token']
-                print("✅ KIS API 토큰 발급 성공")
+                print("[OK] KIS API 토큰 발급 성공")
                 return True
             else:
-                print(f"❌ 토큰 발급 실패: {response.status_code}")
+                print(f"[FAIL] 토큰 발급 실패: {response.status_code}")
                 return False
         except Exception as e:
-            print(f"❌ 토큰 발급 오류: {e}")
+            print(f"[ERR] 토큰 발급 오류: {e}")
             return False
     
     def get_current_price(self, ticker):
@@ -154,14 +154,14 @@ class KISStockAPI:
     
     def get_stock_data(self, ticker, stock_name=""):
         """종목 전체 데이터 수집"""
-        print(f"📊 {stock_name}({ticker}) 수집 중...", end=" ")
+        print(f"  {stock_name}({ticker}) 수집 중...", end=" ")
         
         price_data = self.get_current_price(ticker)
         if not price_data:
             time.sleep(0.5)
             price_data = self.get_current_price(ticker)
         if not price_data:
-            print("❌")
+            print("FAIL")
             return None
 
         time.sleep(0.1)
@@ -171,7 +171,7 @@ class KISStockAPI:
             time.sleep(0.5)
             chart_data = self.get_daily_chart(ticker)
         if not chart_data:
-            print("❌")
+            print("FAIL")
             return None
 
         prev_volume = int(chart_data[1]['acml_vol']) if len(chart_data) > 1 else None
@@ -190,7 +190,7 @@ class KISStockAPI:
             "MA120": self.calculate_ma(chart_data, 120)
         }
         
-        print("✅")
+        print("OK")
         return result
 
 
@@ -242,16 +242,16 @@ def main():
     try:
         with open('stock_list.json', 'r', encoding='utf-8') as f:
             stock_list = json.load(f)
-        print(f"\n📋 관심종목: {len(stock_list)}개")
+        print(f"\n관심종목: {len(stock_list)}개")
     except FileNotFoundError:
-        print("\n❌ stock_list.json 파일이 없습니다.")
+        print("\n[ERR] stock_list.json 파일이 없습니다.")
         print("Notion에서 먼저 종목 리스트를 생성하세요.")
         sys.exit(1)
 
     # 3. API 초기화
     api = KISStockAPI(APP_KEY, APP_SECRET)
     if not api.get_access_token():
-        print("\n❌ API 연동 실패")
+        print("\n[ERR] API 연동 실패")
         sys.exit(1)
     
     # 4. 전체 종목 데이터 수집
@@ -278,19 +278,19 @@ def main():
     total_count = len(stock_list)
 
     if success_count == total_count:
-        print(f"✅ 전체 {total_count}개 종목 모두 수집 완료")
+        print(f"[OK] 전체 {total_count}개 종목 모두 수집 완료")
     else:
-        print(f"⚠️  수집 완료: {success_count}/{total_count}개")
-        print(f"❌ 실패 종목 ({len(failed_stocks)}개):")
+        print(f"[WARN] 수집 완료: {success_count}/{total_count}개")
+        print(f"[FAIL] 실패 종목 ({len(failed_stocks)}개):")
         for s in failed_stocks:
             print(f"   - {s}")
 
-    print(f"💾 저장 완료: stock_data.json")
+    print(f"저장 완료: stock_data.json")
     print("=" * 60)
 
     # 7. 샘플 데이터 출력
     if all_data:
-        print("\n📊 샘플 데이터:")
+        print("\n샘플 데이터:")
         sample = all_data[0]
         print(f"  종목: {sample['종목명']}({sample['종목코드']})")
         print(f"  현재가: {sample['현재가']:,}원")
