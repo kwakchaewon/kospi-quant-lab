@@ -8,15 +8,15 @@ Factor 1~4 기준으로 종목을 분류하는 퀀트 데이터 파이프라인�
 - **KIS Open API** — 현재가, MA5/20, RSI(14), STOCH(9) 자동 수집
 - **네이버 금융 크롤링** — MA60/120, ATR(14), 최근 20일 고가
 - **투자자 매매동향** — 기관/외국인 일별 순매수량·금액 (최근 20거래일)
-- **Yahoo Finance** — Forward PE, 어닝서프라이즈, 다음 실적발표일, 목표주가
 - **Factor 자동 계산** — 수집 데이터를 바탕으로 F1(기술), F2(수급) 판단
+- **F3·F4 placeholder** — 실적·밸류 필드를 `null`로 저장 후 Claude 웹검색으로 수동 보완
 
 ## 빠른 시작
 
 ### 1. 패키지 설치
 
 ```bash
-pip install requests beautifulsoup4 yfinance
+pip install requests beautifulsoup4
 ```
 
 ### 2. API 키 설정
@@ -43,7 +43,7 @@ cp appkey.txt.example appkey.txt
 run_final.bat
 ```
 
-실행 순서: KIS API → 네이버 MA → 네이버 수급 → Yahoo Finance → 병합
+실행 순서: KIS API → 네이버 MA → 네이버 수급 → 병합
 
 최종 결과: `stock_data_full.json`
 
@@ -54,13 +54,12 @@ stock_list.json
     │
     ├── auto_update.py          → stock_data.json
     ├── naver_crawl.py          → naver_ma_data.json
-    ├── naver_investor_crawl.py → naver_investor_data.json
-    └── yfinance_crawl.py       → yfinance_data.json
+    └── naver_investor_crawl.py → naver_investor_data.json
                                          │
                                    merge_data.py
                                          │
                                  stock_data_full.json
-                               (Factor 1~4 분석 포함)
+                          (F1·F2 자동 계산 + F3·F4 placeholder)
 ```
 
 ## Factor 판단 기준
@@ -69,8 +68,21 @@ stock_list.json
 |---|---|---|
 | F1 기술 | 이동평균 정배열 + RSI 범위 (케이스A: 눌림, 케이스B: 돌파) | 자동 계산 |
 | F2 수급 | 기관/외국인 누적 순매수 패턴 (탈락 조건 + 충족 조건) | 자동 계산 |
-| F3 실적 | 어닝서프라이즈, 영업이익 YoY | Claude 웹검색 보완 |
-| F4 밸류 | PER, Forward PE | Claude 웹검색 보완 |
+| F3 실적 | 어닝서프라이즈, 영업이익 YoY, 목표주가 상향 | Claude 웹검색 보완 |
+| F4 밸류 | Fwd PER ÷ 업종평균 PER (F3 ✅ 종목만 분석) | Claude 웹검색 보완 |
+
+### 집계 구조
+
+`stock_data_full.json`의 `집계` 섹션은 F1·F2 기준으로 4개 카테고리를 독립 집계합니다.
+
+| 집계 키 | 내용 |
+|---|---|
+| `F1F2_모두충족` | F1·F2 동시 충족 종목 |
+| `F1만_충족` | F1만 충족 종목 |
+| `F2만_충족` | F2만 충족 종목 |
+| `둘다_미충족` | F1·F2 모두 미충족 종목 |
+
+F3·F4 분석은 `둘다_미충족` 종목을 제외한 나머지에 대해 Claude 웹검색으로 진행합니다.
 
 ### Factor 1 — 기술 (가격 위치)
 
@@ -118,28 +130,32 @@ stock_list.json
 
 ### Factor 3 — 실적
 
-3개 항목 중 2개 이상 충족 시 ✅ 충족.
+**분석 대상:** F1·F2 중 하나라도 충족한 종목. 3개 항목 중 2개 이상 충족 시 ✅ 충족.
 
-| 번호 | 조건 |
-|---|---|
-| ① | 어닝서프라이즈 +5% 초과 |
-| ② | 영업이익 분기 YoY 증가 |
-| ③ | 목표주가 3개월 상향 |
+| 번호 | 항목 | 충족 조건 |
+|---|---|---|
+| ① | 어닝서프라이즈 | (실제 − 컨센서스) / 컨센서스 × 100 > **+5%** |
+| ② | 영업이익 분기 YoY | 전년 동기 대비 **증가** |
+| ③ | 목표주가 | 최근 3개월 상향 리포트 **≥ 2건** |
+
+- 충족 ≥ 2 → `✅ 충족` / 충족 ≤ 1 → `❌ 미충족` / 데이터 부족 ≥ 2 → `❓ 데이터부족`
+- 공개매수·관리종목 등 특수사유 해당 시 `⚠️` 표시 후 F4 분석 제외
 
 ---
 
 ### Factor 4 — 밸류
 
-**Fwd PER ÷ 업종 평균 PER** 비율로 판단.
+**분석 대상:** F3 ✅ + 특수사유 없음 종목만. **Fwd PER ÷ 업종 평균 PER** 비율로 판단.
 
 | 비율 | 판정 |
 |---|---|
 | < 1.0 | ✅ 충족 |
 | 1.0 ~ 1.3 | 유지 |
-| > 1.3 | ⚠️ 주의 |
+| > 1.3 | ⚠️ 고평가주의 |
 | > 2.0 | ❌ 미충족 |
+| 데이터 부족 | ❓ 데이터부족 |
 
-F3/F4는 `stock_data_full.json`에 `null` placeholder로 저장되며 Claude 웹검색으로 수동 보완합니다.
+F3·F4는 `stock_data_full.json`에 `null` placeholder로 저장되며 Claude 웹검색으로 수동 보완합니다.
 
 ## 문서
 
@@ -148,6 +164,8 @@ F3/F4는 `stock_data_full.json`에 `null` placeholder로 저장되며 Claude 웹
 - [Factor 로직](docs/factors.md) — F1~F4 현행 기준 (변경 커밋 시 이전 버전이 자동 아카이빙됨)
 - [Factor 변경 이력](docs/factor-history/) — 과거 버전 스냅샷 (`factors_YYYY-MM-DD.md`)
 - [환경 설정](docs/setup.md) — 설치, API 키 설정, 실행 가이드
+
+> **Factor 아카이브**: `docs/factors.md`가 변경될 때마다 `scripts/archive_factors.py`가 자동으로 날짜별 스냅샷을 `docs/factor-history/`에 저장합니다.
 
 ## 보안
 
