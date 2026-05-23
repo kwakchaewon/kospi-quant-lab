@@ -347,10 +347,10 @@ def merge_stock_data():
     print(f"저장 완료: stock_data_full.json")
     print("=" * 60)
     print(f"\nFactor 집계:")
-    print(f"  F1+F2 모두 충족: {len(cat_both)}개  {cat_both}")
-    print(f"  F1만  충족:      {len(cat_f1_only)}개  {cat_f1_only}")
-    print(f"  F2만  충족:      {len(cat_f2_only)}개  {cat_f2_only}")
-    print(f"  둘 다 미충족:    {len(cat_neither)}개")
+    print(f"  F1 충족: {len(cat_f1)}개  {cat_f1}")
+    print(f"  F2 충족: {len(cat_f2)}개  {cat_f2}")
+    print(f"  F3 충족: {len(cat_f3)}개  {cat_f3}")
+    print(f"  F4 충족: {len(cat_f4)}개  {cat_f4}")
     print(f"\n[DONE] stock_data_full.json을 Claude에 업로드하세요!")
 
 
