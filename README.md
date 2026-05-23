@@ -146,6 +146,7 @@ F3/F4는 `stock_data_full.json`에 `null` placeholder로 저장되며 Claude 웹
 - [아키텍처](docs/architecture.md) — 전체 시스템 구조 및 데이터 흐름
 - [디렉토리 구조](docs/directory-structure.md) — 파일별 역할 설명
 - [Factor 로직](docs/factors.md) — F1~F4 판단 조건 상세
+- [Factor 변경 이력](docs/factor-changelog.md) — 기준 변경 버전 이력 및 체크리스트
 - [환경 설정](docs/setup.md) — 설치, API 키 설정, 실행 가이드
 
 ## 보안
