@@ -234,9 +234,14 @@ def merge_stock_data():
             # F3/F4: Claude 웹검색으로 채울 placeholder
             "Factor3_실적":           None,
             "Factor4_밸류":           None,
+            "업종명":                 None,
+            "Forward_PER":            None,
+            "목표가_평균":            None,
             "컨센서스":               None,
             "최근분기_영업이익_YoY":  None,
+            "최근3년_매출_연속증가":  None,
             "업종_평균_PER":          None,
+            "메모":                   None,
             "분석상태":               "🔍 분석중",
             # Raw 데이터
             "투자자_매매동향":        records,
