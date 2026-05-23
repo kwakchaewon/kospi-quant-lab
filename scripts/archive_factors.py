@@ -37,6 +37,7 @@ def main() -> int:
                 snapshot = candidate
                 break
 
+    HISTORY_DIR.mkdir(parents=True, exist_ok=True)
     snapshot.write_text(old_content, encoding="utf-8")
     subprocess.run(["git", "add", str(HISTORY_DIR)], cwd=ROOT)
     print(f"[archive_factors] 스냅샷 저장 → {snapshot.relative_to(ROOT)}")
