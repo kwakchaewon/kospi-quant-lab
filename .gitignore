@@ -1,5 +1,6 @@
 # API Keys - DO NOT COMMIT
 appkey.txt
+github_token.txt
 
 # Python cache
 __pycache__/
